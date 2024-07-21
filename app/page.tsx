@@ -13,12 +13,20 @@ export default function Home() {
     await getItems(userWallet);
   };
 
-  console.log(walletItems);
   return (
     <div className="container mx-auto">
-      <h1 className="text-3xl font-bold">NFT Send</h1>
-      <p>Send NFTs to anyone</p>
-      <div className="flex flex-col">
+      <div className="flex justify-between items-center border-b border-white/20 py-5">
+        <div>
+          <h1 className="text-3xl font-bold">NFT Send</h1>
+          <p>Send NFTs to anyone</p>
+        </div>
+
+        <button className="rounded-md border border-white p-2">
+          Connect Wallet
+        </button>
+      </div>
+
+      <div className="flex flex-col pt-5">
         <label>Recipient</label>
         <div className="flex flex-col gap-2">
           <input
