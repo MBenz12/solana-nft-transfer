@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 // Import wallet adapter CSS
 import '@solana/wallet-adapter-react-ui/styles.css';
 import useNfts, { NFTData } from "./hooks/useNfts";
+import useWalletItems from "./hooks/useWalletItems";
 
 // Dynamically import WalletMultiButton
 const WalletMultiButton = dynamic(
@@ -22,9 +23,16 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   const [reload, setReload] = useState({});
-  const { nfts: allNfts, fetchNfts, transferNft } = useNfts(reload);
-  const [selectedNft, setSelectedNft] = useState<NFTData>();
+  const {
+    // nfts: allNfts, 
+    // fetchNfts, 
+    transferNft
+  } = useNfts(reload);
+  const [selectedNft, setSelectedNft] = useState<any>();
 
+  const { transferCompressedNFT, getProof, getItems, walletItems: allNfts, } = useWalletItems();
+
+  console.log(allNfts);
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -32,7 +40,7 @@ export default function Home() {
   const handleGetItems = async () => {
     if (!recipientWallet) return;
     try {
-      setWalletItems(await fetchNfts(new PublicKey(recipientWallet)));
+      setWalletItems(await getItems(recipientWallet));
       setError(null);
     } catch (error) {
       console.error('Error getting recipient items:', error);
@@ -43,10 +51,30 @@ export default function Home() {
   const handleTransfer = async () => {
     try {
       if (selectedNft && recipientWallet) {
-        await transferNft(selectedNft, new PublicKey(recipientWallet));
+        if (selectedNft.interface === "ProgrammableNFT") {
+          await transferNft(new PublicKey(selectedNft.id), new PublicKey(recipientWallet));
+        } else {
+          const { root, proof, tree_id} = await getProof(selectedNft.id);
+          const { data_hash, creator_hash, leaf_id }= selectedNft.compression;
+          const { owner, delegate } = selectedNft.ownership;
+
+          console.log(data_hash, creator_hash, leaf_id, owner, delegate, proof, tree_id);
+          await transferCompressedNFT(
+            new PublicKey(tree_id),
+            proof,
+            root,
+            data_hash,
+            creator_hash,
+            leaf_id,
+            owner,
+            new PublicKey(recipientWallet),
+            delegate,
+          );
+        }
         setReload({});
       }
-    } catch(error) {
+    } catch (error) {
+      console.log(error);
       setError('Failed to transfer nft.');
     }
   }
@@ -104,23 +132,24 @@ export default function Home() {
         <div className="mt-8">
           <h2 className="text-2xl font-bold mb-4">Your NFTs</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {allNfts.map((nft: NFTData) => (
+            {allNfts.map((nft: any) => (
               <div
-                key={nft.mint.toString()}
+                key={nft.id}
                 onClick={() => {
-                  if (selectedNft && selectedNft?.mint.toString() === nft.mint.toString()) {
+                  if (selectedNft?.id === nft.id) {
                     setSelectedNft(undefined);
                   } else {
                     setSelectedNft(nft);
                   }
                 }}
-                className={`border border-gray-300 p-4 rounded-md ${(selectedNft && selectedNft?.mint.toString() === nft.mint.toString()) && "border-gray-800"}`}
+                className={`border border-gray-300 p-4 rounded-md ${(selectedNft?.id === nft.id) && "border-gray-800"}`}
               >
-                {nft.image && (
-                  <img src={nft.image} alt={nft.name} className="w-full h-auto mb-2" width={200} height={200} />
+                {nft.content.links.image && (
+                  <img src={nft.content.links.image} alt={nft.content.metadata.name} className="w-full h-auto mb-2" width={200} height={200} />
                 )}
-                <h3 className="font-bold">{nft.name}</h3>
-                <p className="text-sm text-gray-500">{nft.symbol}</p>
+                <h3 className="font-bold">{nft.content.metadata.name}</h3>
+                <p className="text-sm text-gray-500">{nft.content.metadata.symbol}</p>
+                {nft.compression.compressed && <p className="text-sm text-gray-500">Compressed</p>}
               </div>
             ))}
           </div>
@@ -131,13 +160,14 @@ export default function Home() {
         <div className="mt-8">
           <h2 className="text-2xl font-bold mb-4">Recipient&apos;s Items</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {walletItems.map((nft: NFTData, index: number) => (
-              <div key={index} className="border border-gray-300 p-4 rounded-md">
-                {nft.image && (
-                  <img src={nft.image} alt={nft.name} className="w-full h-auto mb-2" width={200} height={200} />
+            {walletItems.map((nft: any) => (
+              <div key={nft.id} className="border border-gray-300 p-4 rounded-md">
+                {nft.content.links.image && (
+                  <img src={nft.content.links.image} alt={nft.content.metadata.name} className="w-full h-auto mb-2" width={200} height={200} />
                 )}
-                <h3 className="font-bold">{nft.name}</h3>
-                <p className="text-sm text-gray-500">{nft.symbol}</p>
+                <h3 className="font-bold">{nft.content.metadata.name}</h3>
+                <p className="text-sm text-gray-500">{nft.content.metadata.symbol}</p>
+                {nft.compression.compressed && <p className="text-sm text-gray-500">Compressed</p>}
               </div>
             ))}
           </div>

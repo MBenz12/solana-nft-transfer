@@ -64,10 +64,10 @@ const useNfts = (reload: {}) => {
         }
     }, []);
 
-    const transferNft = async (nftData: NFTData, recipient: PublicKey) => {
+    const transferNft = async (mint: PublicKey, recipient: PublicKey) => {
         if (!wallet.publicKey || !feePayer) return;
 
-        const nft = await metaplex.nfts().findByMint({ mintAddress: nftData.mint });
+        const nft = await metaplex.nfts().findByMint({ mintAddress: mint });
         const txBuilder = metaplex.nfts().builders().transfer({ 
             nftOrSft: nft, 
             fromOwner: wallet.publicKey, 
