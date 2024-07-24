@@ -1,6 +1,6 @@
-import { useConnection, useWallet, WalletContextState } from "@solana/wallet-adapter-react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useState, useCallback, useEffect } from "react";
-import { Connection, Keypair, AccountMeta, PublicKey, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
+import { AccountMeta, PublicKey, Transaction } from "@solana/web3.js";
 import { createTransferInstruction, PROGRAM_ID } from "@metaplex-foundation/mpl-bubblegum";
 import {
   ConcurrentMerkleTreeAccount,
