@@ -32,7 +32,6 @@ export default function Home() {
 
   const { transferCompressedNFT, getProof, getItems, walletItems: allNfts, } = useWalletItems();
 
-  console.log(allNfts);
   useEffect(() => {
     setIsMounted(true);
   }, []);

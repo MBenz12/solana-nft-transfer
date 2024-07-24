@@ -7,24 +7,6 @@ import {
   SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
   SPL_NOOP_PROGRAM_ID,
 } from "@solana/spl-account-compression";
-// import {
-//   Transaction,
-//   Connection,
-//   PublicKey,
-//   SystemProgram,
-// } from "@solana/web3.js";
-// import {
-//   createTransferCheckedInstruction,
-//   createAssociatedTokenAccountInstruction,
-//   getAssociatedTokenAddress,
-// } from "@solana/spl-token";
-
-// interface WithdrawItemProps {
-//   from: string;
-//   to: string;
-//   tokenMint: string;
-//   isCompressed?: boolean;
-// }
 
 export default function useWalletItems() {
   const [loading, setLoading] = useState(false);
@@ -122,7 +104,7 @@ export default function useWalletItems() {
       .slice(0, proof.length - (!!canopyDepth ? canopyDepth : 0));
 
     const leafOwner = new PublicKey(owner);
-    const leafDelegate = delegate ? new PublicKey(delegate) : PublicKey.default;
+    const leafDelegate = delegate ? new PublicKey(delegate) : leafOwner;
 
     const transferInstruction = createTransferInstruction(
       {
@@ -150,86 +132,14 @@ export default function useWalletItems() {
       txt.feePayer = wallet.publicKey;
 
       const transactionSignature = await wallet.sendTransaction(txt, connection);
-      await connection.confirmTransaction(transactionSignature);
+      await connection.confirmTransaction(transactionSignature, "confirmed");
       console.log(`Successfully transfered the cNFT with txt sig: ${transactionSignature}`);
     } catch (error: any) {
       console.error(`Failed to transfer cNFT with error: ${error}`);
     }
   }, [wallet.publicKey, connection]);
 
-  // const withdrawItem = async ({
-  //   from,
-  //   to,
-  //   tokenMint,
-  //   isCompressed,
-  // }: WithdrawItemProps) => {
-  //   setLoading(true);
-  //   try {
-  //     const mintPubkey = new PublicKey(tokenMint);
-  //     const ownerPubkey = new PublicKey(from);
-  //     const receiveAddress = new PublicKey(to);
-
-  //     // Get the token account of the from wallet (owner)
-  //     const fromTokenAccount = await getAssociatedTokenAddress(
-  //       mintPubkey,
-  //       ownerPubkey
-  //     );
-
-  //     // Ensure the receiver has an ATA for this mint
-  //     const toTokenAccount = await getAssociatedTokenAddress(
-  //       mintPubkey,
-  //       receiveAddress
-  //     );
-
-  //     const sendTxn = new Transaction();
-
-  //     // Check if the receiver's token account exists
-  //     const receiverAccountInfo = await connection.getAccountInfo(
-  //       toTokenAccount
-  //     );
-
-  //     if (!receiverAccountInfo) {
-  //       sendTxn.add(
-  //         createAssociatedTokenAccountInstruction(
-  //           ownerPubkey,
-  //           toTokenAccount,
-  //           receiveAddress,
-  //           mintPubkey
-  //         )
-  //       );
-  //     }
-
-  //     // Add the transfer instruction
-  //     sendTxn.add(
-  //       createTransferCheckedInstruction(
-  //         fromTokenAccount, // source
-  //         mintPubkey, // mint (token address)
-  //         toTokenAccount, // destination
-  //         ownerPubkey, // owner of source account
-  //         1, // amount, for NFT it's usually 1
-  //         0 // decimals, for NFT it's usually 0
-  //       )
-  //     );
-
-  //     //@ts-ignore
-  //     const signer = await primaryWallet.connector.getSigner<any>();
-
-  //     // Sign and send the transaction
-  //     const signedTransaction = await signer.signAndSendTransaction(sendTxn);
-
-  //     return { success: true, signedTransaction };
-  //   } catch (error) {
-  //     return {
-  //       success: false,
-  //       error: error,
-  //     };
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   return {
-    // withdrawItem,
     transferCompressedNFT,
     getItems,
     getProof,
